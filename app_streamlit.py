@@ -2,55 +2,65 @@ import streamlit as st
 import pandas as pd
 import joblib
 
-st.set_page_config(
-    page_title="Prediksi Pergerakan Saham",
-    page_icon="📈"
-)
+# Konfigurasi Halaman
+st.set_page_config(page_title="Stock Predictor RF", page_icon="📈")
 
 # Load Model
+@st.cache_resource
+def load_model():
+    return joblib.load("model_saham_rf.joblib")
+
 try:
-   model = joblib.load("model_saham_rf.joblib")
-except Exception as e:
-    st.error(f"Gagal memuat model: {e}")
+    model = load_model()
+except:
+    st.error("Model tidak ditemukan! Jalankan script training dulu.")
+    st.stop()
 
-st.title("📈 Analisa Prediksi Saham")
-st.markdown("Masukkan data teknikal untuk memprediksi arah harga (Naik/Turun/Tetap)")
+st.title("📈 Stock Movement Predictor")
+st.markdown("Prediksi arah pergerakan harga **besok** menggunakan Random Forest.")
 
-# Ganti text_input menjadi number_input agar tipe datanya otomatis FLOAT/INT
-volume = st.number_input("Volume (Angka):", min_value=0.0, step=1.0)
-rsi = st.number_input("RSI Value:", min_value=0.0, max_value=100.0, value=50.0)
-macd = st.number_input("MACD Value:", value=0.0)
-vol_rata2 = st.number_input("Vol Avg (Periode):", min_value=0.0, step=1.0)
+# Form Input
+with st.container(border=True):
+    col1, col2 = st.columns(2)
+    with col1:
+        volume = st.number_input("Volume Saat Ini:", min_value=0.0, format="%.0f")
+        vol_rata2 = st.number_input("Rata-rata Volume (14 Hari):", min_value=0.0, format="%.0f")
+    with col2:
+        rsi = st.number_input("RSI (14):", min_value=0.0, max_value=100.0, value=50.0)
+        macd = st.number_input("MACD (12, 26, 9):", value=0.0, format="%.4f")
 
-# Pastikan pill ini sesuai dengan kolom "Volume_Status" yang ada di dataset training
-vol_Status = st.pills("Status Volume", ["LOW", "NORMAL", "HIGH"], default="NORMAL")
+    vol_status_text = st.pills("Status Volume Hari Ini", ["HIGH", "LOW", "NORMAL"], default="NORMAL")
 
-if st.button("Prediksi", type="primary"):
-    # Ubah teks status volume ke angka sesuai urutan alfabet (khas LabelEncoder)
-    # Biasanya: HIGH=0, LOW=1, NORMAL=2 (cek hasil training)
-    status_map = {"HIGH": 0, "LOW": 1, "NORMAL": 2}
-    vol_encoded = status_map[vol_Status]
+# Tombol Prediksi
+if st.button("Prediksi Arah Besok", type="primary", use_container_width=True):
+    # Mapping status volume ke angka agar sesuai dengan training (HIGH=0, LOW=1, NORMAL=2)
+    map_status = {"HIGH": 0, "LOW": 1, "NORMAL": 2}
+    vol_encoded = map_status[vol_status_text]
 
-    # Buat DataFrame
+    # Buat DataFrame Input
     data_baru = pd.DataFrame(
         [[volume, rsi, macd, vol_rata2, vol_encoded]], 
-        columns=["Volume", "RSI", "MACD_12_26_9", "Vol_Avg", "Volume_Status_Encoded"]
+        columns=['Volume', 'RSI', 'MACD_12_26_9', 'Vol_Avg', 'Volume_Status_Encoded']
     )
 
-    # Prediksi
-    prediksi = model.predict(data_baru)[0]
+    # Eksekusi Prediksi
+    hasil = model.predict(data_baru)[0]
     prob = model.predict_proba(data_baru)[0]
-    confidence = max(prob)
+    confidence = max(prob) * 100
 
-    st.success(f"Prediksi Pergerakan Besok: **{prediksi}**")
-    st.info(f"Keyakinan Model: {confidence*100:.2f}%")
-       
+    # Tampilkan Hasil
+    st.divider()
+    if hasil == "NAIK":
+        st.success(f"### HASIL: {hasil} 🚀")
+    elif hasil == "TURUN":
+        st.error(f"### HASIL: {hasil} 📉")
+    else:
+        st.warning(f"### HASIL: {hasil} ⚖️")
         
-    except ValueError as ve:
-        st.error("Terjadi kesalahan input data. Pastikan format kolom sama dengan saat training.")
-        st.write(ve)
-    except Exception as e:
-        st.error(f"Error: {e}")
+    st.write(f"Tingkat Keyakinan Model: **{confidence:.2f}%**")
+    
+    if confidence < 55:
+        st.info("💡 Keyakinan rendah, sebaiknya gabungkan dengan analisa manual.")
 
 st.divider()
-st.caption("Dibuat dengan ❤️ oleh **Yonz Suharyono**")
+st.caption("Dibuat oleh Yonz Suharyono | Menggunakan Random Forest Classifier")
