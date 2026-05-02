@@ -134,3 +134,5 @@ if btn_analyze:
             - **Prediksi Harga:** Ini adalah angka estimasi penutupan market besok.
             - Gunakan Support & Resistance sebagai batasan Stop Loss dan Take Profit manual.
             """)
+st.divider()
+st.caption("Dibuat oleh Yonz Suharyono | Menggunakan Random Forest Classifier")
