@@ -135,4 +135,4 @@ if btn_analyze:
             - Gunakan Support & Resistance sebagai batasan Stop Loss dan Take Profit manual.
             """)
 st.divider()
-st.caption("Dibuat oleh Yonz Suharyono | Menggunakan Random Forest Classifier")
+st.caption("💡 Dibuat oleh Yonz Suharyono | Menggunakan Random Forest Classifier")
