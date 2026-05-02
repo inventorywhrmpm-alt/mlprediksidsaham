@@ -9,7 +9,7 @@ st.set_page_config(
 
 # Load Model
 try:
-    model = joblib.load("model_belajar1.joblib")
+   model = joblib.load("model_saham_rf.joblib")
 except Exception as e:
     st.error(f"Gagal memuat model: {e}")
 
@@ -23,32 +23,27 @@ macd = st.number_input("MACD Value:", value=0.0)
 vol_rata2 = st.number_input("Vol Avg (Periode):", min_value=0.0, step=1.0)
 
 # Pastikan pill ini sesuai dengan kolom "Volume_Status" yang ada di dataset training
-vol_status = st.pills("Status Volume", ["LOW", "NORMAL", "HIGHT"], default="NORMAL")
+vol_Status = st.pills("Status Volume", ["LOW", "NORMAL", "HIGH"], default="NORMAL")
 
 if st.button("Prediksi", type="primary"):
-    # Pastikan urutan dan nama kolom SAMA PERSIS dengan saat training model
-    # Jika saat training menggunakan kolom 'Volume_Status' sebagai kategori, 
-    # pastikan model kamu menggunakan Pipeline/Encoder.
-    
+    # Ubah teks status volume ke angka sesuai urutan alfabet (khas LabelEncoder)
+    # Biasanya: HIGH=0, LOW=1, NORMAL=2 (cek hasil training)
+    status_map = {"HIGH": 0, "LOW": 1, "NORMAL": 2}
+    vol_encoded = status_map[vol_Status]
+
+    # Buat DataFrame
     data_baru = pd.DataFrame(
-        [[volume, rsi, macd, vol_rata2, vol_status]], 
-        columns=["Volume", "RSI", "MACD_12_26_9", "Vol_Avg", "Volume_Status"]
+        [[volume, rsi, macd, vol_rata2, vol_encoded]], 
+        columns=["Volume", "RSI", "MACD_12_26_9", "Vol_Avg", "Volume_Status_Encoded"]
     )
 
-    try:
-        # Lakukan prediksi
-        prediksi = model.predict(data_baru)[0]
-        
-        # Ambil probabilitas (keyakinan)
-        probabilitas = model.predict_proba(data_baru)[0]
-        presentase = max(probabilitas)
-        
-        # Mapping hasil jika label_num digunakan (misal: 1 = Naik, dst)
-        hasil_map = {1: "NAIK", -1: "TURUN", 0: "TETAP"}
-        hasil_final = hasil_map.get(prediksi, prediksi)
+    # Prediksi
+    prediksi = model.predict(data_baru)[0]
+    prob = model.predict_proba(data_baru)[0]
+    confidence = max(prob)
 
-        st.success(f"Model memprediksi pergerakan: **{hasil_final}**")
-        st.info(f"Tingkat keyakinan: **{presentase*100:.2f}%**")
+    st.success(f"Prediksi Pergerakan Besok: **{prediksi}**")
+    st.info(f"Keyakinan Model: {confidence*100:.2f}%")
         st.balloons()
         
     except ValueError as ve:
