@@ -41,7 +41,7 @@ def add_features(df):
     # 2. Price Action: Volatility & Spike
     df['Body'] = abs(df['Close'] - df['Open'])
     df['Vol_Avg'] = df['Volume'].rolling(window=20).mean()
-    df['Vol_Spike'] = (df['Volume'] > (df['Vol_Avg'] * 2)).astype(int)
+    df['Vol_Spike'] = (df['Volume'] > (df['Vol_Avg'] * 1.5)).astype(int)
     
     # 3. Support & Resistance (Pivot Points Sederhana)
     df['High_Roll'] = df['High'].rolling(window=20).max()
