@@ -44,7 +44,7 @@ if st.button("Prediksi", type="primary"):
 
     st.success(f"Prediksi Pergerakan Besok: **{prediksi}**")
     st.info(f"Keyakinan Model: {confidence*100:.2f}%")
-        st.balloons()
+       
         
     except ValueError as ve:
         st.error("Terjadi kesalahan input data. Pastikan format kolom sama dengan saat training.")
