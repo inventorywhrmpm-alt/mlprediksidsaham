@@ -3,7 +3,7 @@ import pandas as pd
 import joblib
 
 st.set_page_config(
-	page_title = "Belajar Klasifikasi Jeruk",
+	page_title = "predksi harga saham",
 	page_icon = ":tangerine:"
 )
 
